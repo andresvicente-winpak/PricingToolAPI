@@ -1,6 +1,0 @@
-﻿PRRF;CUCD;CUNO;FVDT;ITNO;SAPR;SACD;SPUN;NTCD;CMNO;FMID;RESI;MXID;SGGU;OBV1;OBV2;OBV3;VFDT;LVDT;STRT;ULIP
-*Pricelist(10);*Currency(3);Customernumber(10);*Validfrom(10);*Itemnumber(15);*Salesprice(19);Salespricequantity(5);Salespriceunitofmeasure(3);Netpriceused(1);Salescampaign(10);Formula(5);Resultidentity(5);Scale(5);Scaleunitofmeasure(3);Start value 1(15);Start value 2(15);Start value 3(15);Valid from(10);Valid to(10);Structure type(3);Update linked pricelist(1)
-COMBO_65-1;USD;XRIA;20250101;N04KN5-13849JA;198.1000;;KI;;;;;;;;;;;;;;
-COMBO_65-1;USD;XRIA;20250101;N04KN5-13849JB;198.1000;;KI;;;;;;;;;;;;;;
-COMBO_65-1;USD;XRIA;20250101;N04KN5-13849JC;198.1000;;KI;;;;;;;;;;;;;;
-COMBO_65-1;USD;XRIA;20250101;N04KN5-13849JD;198.1000;;KI;;;;;;;;;;;;;;
