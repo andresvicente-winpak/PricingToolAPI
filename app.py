@@ -10,11 +10,9 @@ app = Flask(__name__)
 
 @app.route('/process', methods=['POST'])
 def process():
-    if 'file' not in request.files:
-        return jsonify({"error": "No file provided"}), 400
-
     try:
-        uploaded_zip = request.files['file']
+        uploaded_zip = BytesIO(request.get_data())
+
         work_dir = tempfile.mkdtemp()
         input_dir = os.path.join(work_dir, "input")
         sample_dir = os.path.join(work_dir, "sample")
