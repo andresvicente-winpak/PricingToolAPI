@@ -1,59 +1,67 @@
-from flask import Flask, request, send_file, jsonify, request
+from flask import Flask, request, send_file, jsonify
 from FixedLoadSheet import process_file, load_excel_file
 import pandas as pd
 import os
 import tempfile
 import zipfile
 from io import BytesIO
-import shutil
 
 app = Flask(__name__)
 
 @app.route('/process', methods=['POST'])
 def process():
     try:
-        # Get uploaded Excel file
-        uploaded_excel = BytesIO(request.get_data())
+        uploaded_zip = BytesIO(request.get_data())
 
-        # Setup working dirs
         work_dir = tempfile.mkdtemp()
         input_dir = os.path.join(work_dir, "input")
         sample_dir = os.path.join(work_dir, "sample")
         output_dir = os.path.join(work_dir, "output")
+        zip_output_dir = os.path.join(work_dir, "zips")
+
         os.makedirs(input_dir, exist_ok=True)
         os.makedirs(sample_dir, exist_ok=True)
         os.makedirs(output_dir, exist_ok=True)
+        os.makedirs(zip_output_dir, exist_ok=True)
 
-        # Save uploaded Excel
-        input_excel_path = os.path.join(input_dir, "input.xlsx")
-        with open(input_excel_path, 'wb') as f:
-            f.write(uploaded_excel.read())
+        # Extract uploaded zip
+        with zipfile.ZipFile(uploaded_zip, 'r') as z:
+            z.extractall(input_dir)
 
         # Load config
         config_path = os.path.join(input_dir, "configuration.xlsx")
-        shutil.copy("configuration.xlsx", config_path)
         config_df = load_excel_file(config_path, header=0, dtype=str)
         config_df.columns = [str(col).strip() for col in config_df.columns]
         config_df = config_df.dropna(subset=['Dest_table', 'Dest_field'])
 
-        # Copy static sample files into sample dir
-        for name in ["1-baseprice.csv", "1-gradprice.csv", "1-matrixprice.csv"]:
-            shutil.copy(name, os.path.join(sample_dir, name))
+        # Process all Excel files and zip them individually
+        price_input_path = os.path.join(input_dir, "PriceList Input")
+        for fname in os.listdir(price_input_path):
+            if fname.endswith(('.xlsx', '.xls')):
+                full_path = os.path.join(price_input_path, fname)
+                process_file(full_path, config_df, sample_dir, output_dir)
 
-        # Process file
-        process_file(input_excel_path, config_df, sample_dir, output_dir)
+                # Zip that Excel's specific output folder
+                excel_name = os.path.splitext(fname)[0]
+                excel_output_folder = os.path.join(output_dir, excel_name)
+                individual_zip_path = os.path.join(zip_output_dir, f"{excel_name}.zip")
 
-        # Create zip of output
-        mem_zip = BytesIO()
-        with zipfile.ZipFile(mem_zip, 'w') as zf:
-            for root, _, files in os.walk(output_dir):
-                for f in files:
-                    fp = os.path.join(root, f)
-                    arc = os.path.relpath(fp, output_dir)
-                    zf.write(fp, arc)
-        mem_zip.seek(0)
+                with zipfile.ZipFile(individual_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    for root, _, files in os.walk(excel_output_folder):
+                        for file in files:
+                            full_path = os.path.join(root, file)
+                            arcname = os.path.basename(full_path)
+                            zipf.write(full_path, arcname)
 
-        return send_file(mem_zip, download_name='output.zip', as_attachment=True)
+        # Bundle all per-input ZIPs into one master ZIP
+        final_zip = BytesIO()
+        with zipfile.ZipFile(final_zip, 'w') as master_zip:
+            for zip_name in os.listdir(zip_output_dir):
+                zip_path = os.path.join(zip_output_dir, zip_name)
+                master_zip.write(zip_path, arcname=zip_name)
+        final_zip.seek(0)
+
+        return send_file(final_zip, download_name='output.zip', as_attachment=True)
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
