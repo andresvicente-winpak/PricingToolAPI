@@ -34,7 +34,7 @@ def process():
         config_df = config_df.dropna(subset=['Dest_table', 'Dest_field'])
 
         # Define path to local sample CSVs
-        local_sample_dir = os.path.join(os.getcwd(), "sample")
+        local_sample_dir = os.getcwd()
 
         # Process the uploaded Excel
         process_file(input_excel_path, config_df, local_sample_dir, output_dir)
