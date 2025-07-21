@@ -39,10 +39,16 @@ def process():
         # Process the uploaded Excel
         process_file(input_excel_path, config_df, local_sample_dir, output_dir)
 
-        # Zip the processed output
+        # Locate subfolder inside output_dir
+        subfolders = [d for d in os.listdir(output_dir) if os.path.isdir(os.path.join(output_dir, d))]
+        if not subfolders:
+            raise FileNotFoundError("No output files generated.")
+        target_output = os.path.join(output_dir, subfolders[0])
+
+        # Zip the processed subfolder
         zip_buffer = BytesIO()
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
-            for root, _, files in os.walk(output_dir):
+            for root, _, files in os.walk(target_output):
                 for file in files:
                     full_path = os.path.join(root, file)
                     arcname = os.path.basename(full_path)
