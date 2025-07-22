@@ -8,7 +8,7 @@ from collections import defaultdict
 
 output_dir = "PricingToolPY2/Pricing Outputs"
 os.makedirs(output_dir, exist_ok=True)
-log_path = os.path.join("PricingToolPY2", "FixedLoadSheet_log.txt")
+log_path = os.path.join(os.getcwd(), "PricingToolPY2", "FixedLoadSheet_log.txt")
 
 def normalize(text):
     return re.sub(r'\s+', ' ', str(text).strip()).upper()
