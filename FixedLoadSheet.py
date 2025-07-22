@@ -186,6 +186,9 @@ def main():
         sample_dir = "sample"
         os.makedirs(output_dir, exist_ok=True)
 
+        log(f"📁 Looking in folder: {input_folder}")
+        log(f"📄 Files found: {os.listdir(input_folder)}")
+
         config_df = load_excel_file(config_path, header=0, dtype=str)
         config_df.columns = [str(col).strip() for col in config_df.columns]
         config_df = config_df.dropna(subset=['Dest_table', 'Dest_field'])
