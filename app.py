@@ -39,18 +39,19 @@ def process():
         # Process the uploaded Excel
         process_file(input_excel_path, config_df, local_sample_dir, local_output_dir)
 
-        # Read log file contents
-        if os.path.exists(log_path):
-            with open(log_path, "r", encoding="utf-8") as log_file:
-                log_content = log_file.read()
-        else:
-            log_content = "Log file not found."
-
-        return jsonify({
-            "status": "success",
-            "log": log_content
-        })
-		
+	# Wait briefly to ensure log is written before reading it
+	time.sleep(1)
+	
+	if os.path.exists(log_path):
+	    with open(log_path, "r", encoding="utf-8") as log_file:
+	        log_content = log_file.read()
+	else:
+	    log_content = "❌ Log file not found (processing may have silently failed)."
+	
+	return jsonify({
+	    "status": "success",
+	    "log": log_content
+	})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
