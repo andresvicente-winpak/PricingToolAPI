@@ -6,9 +6,10 @@ import datetime
 import zipfile
 from collections import defaultdict
 
+output_dir = "Pricing Outputs"
+os.makedirs(output_dir, exist_ok=True)
 log_path = os.path.join(output_dir, "FixedLoadSheet_log.txt")
 
-														   
 def normalize(text):
     return re.sub(r'\s+', ' ', str(text).strip()).upper()
 
@@ -48,8 +49,8 @@ def write_text_file(path, content_lines, retries=3):
 
 def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
     input_filename = os.path.splitext(os.path.basename(pricelist_path))[0]
-    output_dir = os.path.join(output_base_dir, input_filename)
-    os.makedirs(output_dir, exist_ok=True)
+    output_subdir = os.path.join(output_base_dir, input_filename)
+    os.makedirs(output_subdir, exist_ok=True)
 
     field_map = defaultdict(list)
     constants = defaultdict(dict)
@@ -66,8 +67,6 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
     excel_file = pd.ExcelFile(pricelist_path)
     if "Load_Sheet" not in excel_file.sheet_names:
         print(f"❌ Sheet 'Load_Sheet' not found in {pricelist_path}. Skipping.")
-					  
-		
         return
     selected_sheet = "Load_Sheet"
 
@@ -78,8 +77,6 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
         sample_file = os.path.join(sample_dir, f"1-{table}.csv")
         if not os.path.exists(sample_file):
             print(f"Sample file for '{table}' not found. Skipping.")
-				  
-		 
             continue
 
         lines = load_text_file_lines(sample_file)
@@ -132,7 +129,6 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
                 else:
                     value = ""
 
-										
                 if field == "SAPR" and table.lower() == "baseprice" and base_price_zero:
                     value = "0.0000"
                 elif field == "SAPR":
@@ -143,14 +139,13 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
 
                 if field in max_lengths and len(value) > max_lengths[field]:
                     print(f"Warning: Row {idx + 3}, field '{field}' exceeds max length ({max_lengths[field]}): {value}")
-		   
                     value = value[:max_lengths[field]]
 
                 out_row.append(value)
 
             output_rows.append(out_row)
 
-        output_file = get_safe_output_path(output_dir, table, input_filename)
+        output_file = get_safe_output_path(output_subdir, table, input_filename)
         output_content = [
             header_line + "\n",
             format_line + "\n"
@@ -158,20 +153,15 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
 
         write_text_file(output_file, output_content)
         print(f"✔ Output written: {os.path.basename(output_file)} ({len(output_rows)} rows, {len(df) - len(output_rows)} skipped)")
-								   
-		
 
-				
     zip_path = os.path.join(output_base_dir, f"{input_filename}.zip")
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, _, files in os.walk(output_dir):
+        for root, _, files in os.walk(output_subdir):
             for file in files:
                 full_path = os.path.join(root, file)
-                arcname = os.path.relpath(full_path, start=output_dir)
+                arcname = os.path.relpath(full_path, start=output_subdir)
                 zipf.write(full_path, arcname)
     print(f"✅ Zipped: {zip_path}")
-		  
-	   
 
 def main():
     with open(log_path, "w", encoding="utf-8") as log_file:
@@ -187,7 +177,6 @@ def main():
         input_folder = "PriceList Input"
         config_path = "configuration.xlsx"
         sample_dir = "sample"
-        output_dir = "output"
         os.makedirs(output_dir, exist_ok=True)
 
         config_df = load_excel_file(config_path, header=0, dtype=str)
