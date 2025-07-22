@@ -6,7 +6,8 @@ import datetime
 import zipfile
 from collections import defaultdict
 
-log_path = r"C:\Users\w10itasv\OneDrive - Winpak Ltd\PricingToolPY2\FixedLoadSheet_log.txt"
+log_path = os.path.join(output_dir, "FixedLoadSheet_log.txt")
+
 														   
 def normalize(text):
     return re.sub(r'\s+', ' ', str(text).strip()).upper()
