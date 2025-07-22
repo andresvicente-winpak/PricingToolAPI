@@ -8,7 +8,14 @@ from collections import defaultdict
 
 output_dir = "PricingToolPY2/Pricing Outputs"
 os.makedirs(output_dir, exist_ok=True)
-log_path = os.path.join(os.getcwd(), "PricingToolPY2", "FixedLoadSheet_log.txt")
+
+# Ensure log file exists
+log_dir = "PricingToolPY2"
+os.makedirs(log_dir, exist_ok=True)
+log_path = os.path.join(log_dir, "FixedLoadSheet_log.txt")
+if not os.path.exists(log_path):
+    with open(log_path, "w", encoding="utf-8") as f:
+        f.write("Log file initialized.\n")
 
 def normalize(text):
     return re.sub(r'\s+', ' ', str(text).strip()).upper()
@@ -86,7 +93,7 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
         length_defs = format_line.split(";")
         max_lengths = {}
         for i, val in enumerate(length_defs):
-            match = re.match(r"\((\d+)\)", val)
+            match = re.match(r"\\((\\d+)\\)", val)
             if match:
                 max_lengths[headers[i]] = int(match.group(1))
 
