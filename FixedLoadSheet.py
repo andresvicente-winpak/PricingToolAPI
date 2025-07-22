@@ -1,4 +1,3 @@
-print("🚨 Script started.")
 import sys
 import pandas as pd
 import os
@@ -8,18 +7,7 @@ import zipfile
 from collections import defaultdict
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
-log_path = r"C:\Users\w10itasv\Documents\PricingToolPY2\script_log.txt"
-log_file = open(log_path, "w", encoding="utf-8")
-
-def log(msg):
-    print(msg)
-    sys.stdout.flush()
-    log_file.write(msg + "\n")
-    log_file.flush()
-
-log("🚀 SCRIPT STARTED")
-log(f"📂 Script location: {base_dir}")
-log(f"📂 Current working dir: {os.getcwd()}")
+log_path = os.path.join(base_dir, "FixedLoadSheet_log.txt")
 
 def normalize(text):
     return re.sub(r'\s+', ' ', str(text).strip()).upper()
@@ -78,8 +66,8 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
     excel_file = pd.ExcelFile(pricelist_path)
     if "Load_Sheet" not in excel_file.sheet_names:
         print(f"❌ Sheet 'Load_Sheet' not found in {pricelist_path}. Skipping.")
-        log(f"❌ Sheet 'Load_Sheet' not found in {pricelist_path}. Skipping.")
-        sys.stdout.flush()
+																			   
+						  
         return
     selected_sheet = "Load_Sheet"
 
@@ -90,8 +78,8 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
         sample_file = os.path.join(sample_dir, f"1-{table}.csv")
         if not os.path.exists(sample_file):
             print(f"Sample file for '{table}' not found. Skipping.")
-            log(f"Sample file for '{table}' not found. Skipping.")
-            sys.stdout.flush()
+														  
+						  
             continue
 
         lines = load_text_file_lines(sample_file)
@@ -144,18 +132,18 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
                 else:
                     value = ""
 
-                # Apply SAPR transformation
+				# Apply SAPR transformation						   
                 if field == "SAPR" and table.lower() == "baseprice" and base_price_zero:
                     value = "0.0000"
                 elif field == "SAPR":
                     try:
                         value = f"{float(value):.4f}"
                     except:
-                        value = value  # Leave unmodified if not a float
+                        value = value
 
                 if field in max_lengths and len(value) > max_lengths[field]:
                     print(f"Warning: Row {idx + 3}, field '{field}' exceeds max length ({max_lengths[field]}): {value}")
-                    sys.stdout.flush()
+									  
                     value = value[:max_lengths[field]]
 
                 out_row.append(value)
@@ -170,10 +158,10 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
 
         write_text_file(output_file, output_content)
         print(f"✔ Output written: {os.path.basename(output_file)} ({len(output_rows)} rows, {len(df) - len(output_rows)} skipped)")
-        log(f"✔ Output written: {os.path.basename(output_file)} ({len(output_rows)} rows, {len(df) - len(output_rows)} skipped)")
-        sys.stdout.flush()
+																																   
+						  
 
-    # Zip output
+	# Zip output			
     zip_path = os.path.join(output_base_dir, f"{input_filename}.zip")
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for root, _, files in os.walk(output_dir):
@@ -182,38 +170,44 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
                 arcname = os.path.relpath(full_path, start=output_dir)
                 zipf.write(full_path, arcname)
     print(f"✅ Zipped: {zip_path}")
-    log(f"✅ Zipped: {zip_path}")
-    sys.stdout.flush()
+								  
+					  
 
 def main():
-    print("🟢 Starting script...")
-    sys.stdout.flush()
+    with open(log_path, "w", encoding="utf-8") as log_file:
+        def log(msg):
+            print(msg)
+            sys.stdout.flush()
+            log_file.write(msg + "\n")
+            log_file.flush()
 
-    input_folder = "PriceList Input"
-    config_path = "configuration.xlsx"
-    sample_dir = "sample"
-    output_dir = "output"
+        log("🚀 Script started.")
+        log(f"📂 Base directory: {base_dir}")
 
-    os.makedirs(output_dir, exist_ok=True)
+        input_folder = "PriceList Input"
+        config_path = "configuration.xlsx"
+        sample_dir = "sample"
+        output_dir = "output"
+        os.makedirs(output_dir, exist_ok=True)
 
-    config_df = load_excel_file(config_path, header=0, dtype=str)
-    config_df.columns = [str(col).strip() for col in config_df.columns]
-    config_df = config_df.dropna(subset=['Dest_table', 'Dest_field'])
+        config_df = load_excel_file(config_path, header=0, dtype=str)
+        config_df.columns = [str(col).strip() for col in config_df.columns]
+        config_df = config_df.dropna(subset=['Dest_table', 'Dest_field'])
 
-    for file_name in os.listdir(input_folder):
-        if file_name.lower().endswith(('.xls', '.xlsx')):
-            full_path = os.path.join(input_folder, file_name)
-            process_file(full_path, config_df, sample_dir, output_dir)
+        for file_name in os.listdir(input_folder):
+            if file_name.lower().endswith(('.xls', '.xlsx')):
+                full_path = os.path.join(input_folder, file_name)
+                process_file(full_path, config_df, sample_dir, output_dir)
+                log(f"✅ Processed {file_name}")
 
-    print("✅ Script completed successfully.")
-    log("✅ Script completed successfully.")
-    sys.stdout.flush()
-
-print("⚠️ Entered main block.")
-log("⚠️ Entered main block.")
+        log("✅ Script completed successfully.")
 
 if __name__ == "__main__":
-    main()
-print("📦 About to enter main block.")
-log("📦 About to enter main block.")
-sys.stdout.flush()
+    try:
+        main()
+    except Exception as e:
+        with open(log_path, "a", encoding="utf-8") as log_file:
+            log_file.write(f"❌ Unhandled exception: {str(e)}\n")
+            import traceback
+            traceback.print_exc(file=log_file)
+        raise
