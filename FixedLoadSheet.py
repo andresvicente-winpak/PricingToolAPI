@@ -6,7 +6,7 @@ import datetime
 import zipfile
 from collections import defaultdict
 
-output_dir = "Pricing Outputs"
+output_dir = "PricingToolPY2/"
 os.makedirs(output_dir, exist_ok=True)
 log_path = os.path.join(output_dir, "FixedLoadSheet_log.txt")
 
