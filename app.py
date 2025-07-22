@@ -1,10 +1,10 @@
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request, jsonify
 from FixedLoadSheet import process_file, load_excel_file, output_dir, log_path
 import pandas as pd
 import os
 import tempfile
-import zipfile
 from io import BytesIO
+import time
 
 app = Flask(__name__)
 
@@ -27,31 +27,34 @@ def process():
         with open(input_excel_path, 'wb') as f:
             f.write(uploaded_excel.read())
 
-        # Load local configuration file
+        # Load configuration
         config_path = os.path.join(os.getcwd(), "configuration.xlsx")
         config_df = load_excel_file(config_path, header=0, dtype=str)
         config_df.columns = [str(col).strip() for col in config_df.columns]
         config_df = config_df.dropna(subset=['Dest_table', 'Dest_field'])
 
-        # Use current working directory for sample CSVs
+        # Sample files come from current working directory
         local_sample_dir = os.getcwd()
 
-        # Process the uploaded Excel
+        # Process file
         process_file(input_excel_path, config_df, local_sample_dir, local_output_dir)
 
-	# Wait briefly to ensure log is written before reading it
-	time.sleep(1)
-	
-	if os.path.exists(log_path):
-	    with open(log_path, "r", encoding="utf-8") as log_file:
-	        log_content = log_file.read()
-	else:
-	    log_content = "❌ Log file not found (processing may have silently failed)."
-	
-	return jsonify({
-	    "status": "success",
-	    "log": log_content
-	})
+        # Wait briefly to ensure log file is written
+        time.sleep(1)
+
+        # Read and return log file content
+        log_content = ""
+        try:
+            with open(log_path, "r", encoding="utf-8") as f:
+                log_content = f.read()
+        except Exception as e:
+            log_content = f"⚠️ Failed to read log file: {str(e)}"
+
+        return jsonify({
+            "status": "success",
+            "log": log_content
+        })
+
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
