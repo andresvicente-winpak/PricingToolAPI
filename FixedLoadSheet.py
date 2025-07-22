@@ -6,9 +6,8 @@ import datetime
 import zipfile
 from collections import defaultdict
 
-base_dir = os.path.dirname(os.path.abspath(__file__))
-log_path = os.path.join(base_dir, "FixedLoadSheet_log.txt")
-
+log_path = r"C:\Users\w10itasv\OneDrive - Winpak Ltd\PricingToolPY2\FixedLoadSheet_log.txt"
+														   
 def normalize(text):
     return re.sub(r'\s+', ' ', str(text).strip()).upper()
 
@@ -66,8 +65,8 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
     excel_file = pd.ExcelFile(pricelist_path)
     if "Load_Sheet" not in excel_file.sheet_names:
         print(f"❌ Sheet 'Load_Sheet' not found in {pricelist_path}. Skipping.")
-																			   
-						  
+					  
+		
         return
     selected_sheet = "Load_Sheet"
 
@@ -78,8 +77,8 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
         sample_file = os.path.join(sample_dir, f"1-{table}.csv")
         if not os.path.exists(sample_file):
             print(f"Sample file for '{table}' not found. Skipping.")
-														  
-						  
+				  
+		 
             continue
 
         lines = load_text_file_lines(sample_file)
@@ -132,7 +131,7 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
                 else:
                     value = ""
 
-				# Apply SAPR transformation						   
+										
                 if field == "SAPR" and table.lower() == "baseprice" and base_price_zero:
                     value = "0.0000"
                 elif field == "SAPR":
@@ -143,7 +142,7 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
 
                 if field in max_lengths and len(value) > max_lengths[field]:
                     print(f"Warning: Row {idx + 3}, field '{field}' exceeds max length ({max_lengths[field]}): {value}")
-									  
+		   
                     value = value[:max_lengths[field]]
 
                 out_row.append(value)
@@ -158,10 +157,10 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
 
         write_text_file(output_file, output_content)
         print(f"✔ Output written: {os.path.basename(output_file)} ({len(output_rows)} rows, {len(df) - len(output_rows)} skipped)")
-																																   
-						  
+								   
+		
 
-	# Zip output			
+				
     zip_path = os.path.join(output_base_dir, f"{input_filename}.zip")
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for root, _, files in os.walk(output_dir):
@@ -170,8 +169,8 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
                 arcname = os.path.relpath(full_path, start=output_dir)
                 zipf.write(full_path, arcname)
     print(f"✅ Zipped: {zip_path}")
-								  
-					  
+		  
+	   
 
 def main():
     with open(log_path, "w", encoding="utf-8") as log_file:
@@ -182,7 +181,7 @@ def main():
             log_file.flush()
 
         log("🚀 Script started.")
-        log(f"📂 Base directory: {base_dir}")
+        log(f"📂 Log path: {log_path}")
 
         input_folder = "PriceList Input"
         config_path = "configuration.xlsx"
