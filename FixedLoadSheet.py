@@ -183,7 +183,7 @@ def main():
 
         input_folder = "PriceList Input"
         config_path = "configuration.xlsx"
-        sample_dir = "sample"
+        sample_dir = "."
         os.makedirs(output_dir, exist_ok=True)
 
         log(f"📁 Looking in folder: {input_folder}")
