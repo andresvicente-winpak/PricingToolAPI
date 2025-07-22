@@ -109,6 +109,7 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
         output_rows = []
         for idx, row in df.iterrows():
             pricing_type = str(row.get("PricingType", "")).strip().lower()
+            base_price_zero = str(row.get("Base_Price_zero", "F")).strip().upper() == "T"
 
             combo_key = (
                 str(row.get("PriceList", "")).strip(),
@@ -142,6 +143,15 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
                         value = ""
                 else:
                     value = ""
+
+                # Apply SAPR transformation
+                if field == "SAPR" and table.lower() == "baseprice" and base_price_zero:
+                    value = "0.0000"
+                elif field == "SAPR":
+                    try:
+                        value = f"{float(value):.4f}"
+                    except:
+                        value = value  # Leave unmodified if not a float
 
                 if field in max_lengths and len(value) > max_lengths[field]:
                     print(f"Warning: Row {idx + 3}, field '{field}' exceeds max length ({max_lengths[field]}): {value}")
