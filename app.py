@@ -15,11 +15,10 @@ def process():
 
         work_dir = tempfile.mkdtemp()
         input_dir = os.path.join(work_dir, "input")
-        sample_dir = os.path.join(work_dir, "sample")
         local_output_dir = output_dir
+        sample_dir = os.getcwd()  # ← this is the fix
 
         os.makedirs(input_dir, exist_ok=True)
-        os.makedirs(sample_dir, exist_ok=True)
         os.makedirs(local_output_dir, exist_ok=True)
 
         # Save uploaded Excel to input folder
