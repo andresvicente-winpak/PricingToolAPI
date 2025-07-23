@@ -1,10 +1,10 @@
-from flask import Flask, request, jsonify
-from FixedLoadSheet import process_file, load_excel_file, output_dir, log_path
+from flask import Flask, request, send_file, jsonify
+from FixedLoadSheet import process_file, load_excel_file
 import pandas as pd
 import os
 import tempfile
+import zipfile
 from io import BytesIO
-import time
 
 app = Flask(__name__)
 
@@ -15,47 +15,50 @@ def process():
 
         work_dir = tempfile.mkdtemp()
         input_dir = os.path.join(work_dir, "input")
-        local_output_dir = output_dir
-        sample_dir = os.getcwd()  # ← this is the fix
+        sample_dir = os.path.join(work_dir, "sample")
+        output_dir = os.path.join(work_dir, "output")
 
         os.makedirs(input_dir, exist_ok=True)
-        os.makedirs(local_output_dir, exist_ok=True)
+        os.makedirs(sample_dir, exist_ok=True)
+        os.makedirs(output_dir, exist_ok=True)
 
         # Save uploaded Excel to input folder
         input_excel_path = os.path.join(input_dir, "input.xlsx")
         with open(input_excel_path, 'wb') as f:
             f.write(uploaded_excel.read())
 
-        # Load configuration
+        # Load local configuration file
         config_path = os.path.join(os.getcwd(), "configuration.xlsx")
         config_df = load_excel_file(config_path, header=0, dtype=str)
         config_df.columns = [str(col).strip() for col in config_df.columns]
         config_df = config_df.dropna(subset=['Dest_table', 'Dest_field'])
 
-        # Sample files come from current working directory
+        # Define path to local sample CSVs
         local_sample_dir = os.getcwd()
 
-        # Process file
-        process_file(input_excel_path, config_df, local_sample_dir, local_output_dir)
+        # Process the uploaded Excel
+        process_file(input_excel_path, config_df, local_sample_dir, output_dir)
 
-        # Wait briefly to ensure log file is written
-        time.sleep(1)
+        # Locate subfolder inside output_dir
+        subfolders = [d for d in os.listdir(output_dir) if os.path.isdir(os.path.join(output_dir, d))]
+        if not subfolders:
+            raise FileNotFoundError("No output files generated.")
+        target_output = os.path.join(output_dir, subfolders[0])
 
-        # Read and return log file content
-        log_content = ""
-        try:
-            with open(log_path, "r", encoding="utf-8") as f:
-                log_content = f.read()
-        except Exception as e:
-            log_content = f"⚠️ Failed to read log file: {str(e)}"
+        # Zip the processed subfolder
+        zip_buffer = BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, _, files in os.walk(target_output):
+                for file in files:
+                    full_path = os.path.join(root, file)
+                    arcname = os.path.basename(full_path)
+                    zipf.write(full_path, arcname)
+        zip_buffer.seek(0)
 
-        return jsonify({
-            "status": "success",
-            "log": log_content
-        })
+        return send_file(zip_buffer, download_name='output.zip', as_attachment=True)
 
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
