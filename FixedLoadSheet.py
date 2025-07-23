@@ -75,7 +75,7 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
         else:
             field_map[dest].append((normalize(src), field))
 
-    excel_file = pd.ExcelFile(pricelist_path, engine='openpyxl')
+    excel_file = pd.ExcelFile(pricelist_path)
     if "Load_Sheet" not in excel_file.sheet_names:
         print(f"❌ Sheet 'Load_Sheet' not found in {pricelist_path}. Skipping.")
         log(f"❌ Sheet 'Load_Sheet' not found in {pricelist_path}. Skipping.")
