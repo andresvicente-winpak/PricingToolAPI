@@ -1,3 +1,4 @@
+print("🚨 Script started.")
 import sys
 import pandas as pd
 import os
@@ -6,16 +7,19 @@ import datetime
 import zipfile
 from collections import defaultdict
 
-output_dir = "PricingToolPY2/Pricing Outputs"
-os.makedirs(output_dir, exist_ok=True)
+base_dir = os.path.dirname(os.path.abspath(__file__))
+log_path = r"C:\Users\w10itasv\Documents\PricingToolPY2\script_log.txt"
+log_file = open(log_path, "w", encoding="utf-8")
 
-# Ensure log file exists
-log_dir = "PricingToolPY2"
-os.makedirs(log_dir, exist_ok=True)
-log_path = os.path.join(log_dir, "FixedLoadSheet_log.txt")
-if not os.path.exists(log_path):
-    with open(log_path, "w", encoding="utf-8") as f:
-        f.write("Log file initialized.\n")
+def log(msg):
+    print(msg)
+    sys.stdout.flush()
+    log_file.write(msg + "\n")
+    log_file.flush()
+
+log("🚀 SCRIPT STARTED")
+log(f"📂 Script location: {base_dir}")
+log(f"📂 Current working dir: {os.getcwd()}")
 
 def normalize(text):
     return re.sub(r'\s+', ' ', str(text).strip()).upper()
@@ -56,8 +60,8 @@ def write_text_file(path, content_lines, retries=3):
 
 def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
     input_filename = os.path.splitext(os.path.basename(pricelist_path))[0]
-    output_subdir = os.path.join(output_base_dir, input_filename)
-    os.makedirs(output_subdir, exist_ok=True)
+    output_dir = os.path.join(output_base_dir, input_filename)
+    os.makedirs(output_dir, exist_ok=True)
 
     field_map = defaultdict(list)
     constants = defaultdict(dict)
@@ -74,6 +78,8 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
     excel_file = pd.ExcelFile(pricelist_path)
     if "Load_Sheet" not in excel_file.sheet_names:
         print(f"❌ Sheet 'Load_Sheet' not found in {pricelist_path}. Skipping.")
+        log(f"❌ Sheet 'Load_Sheet' not found in {pricelist_path}. Skipping.")
+        sys.stdout.flush()
         return
     selected_sheet = "Load_Sheet"
 
@@ -84,6 +90,8 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
         sample_file = os.path.join(sample_dir, f"1-{table}.csv")
         if not os.path.exists(sample_file):
             print(f"Sample file for '{table}' not found. Skipping.")
+            log(f"Sample file for '{table}' not found. Skipping.")
+            sys.stdout.flush()
             continue
 
         lines = load_text_file_lines(sample_file)
@@ -93,7 +101,7 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
         length_defs = format_line.split(";")
         max_lengths = {}
         for i, val in enumerate(length_defs):
-            match = re.match(r"\\((\\d+)\\)", val)
+            match = re.match(r"\((\d+)\)", val)
             if match:
                 max_lengths[headers[i]] = int(match.group(1))
 
@@ -136,23 +144,25 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
                 else:
                     value = ""
 
+                # Apply SAPR transformation
                 if field == "SAPR" and table.lower() == "baseprice" and base_price_zero:
                     value = "0.0000"
                 elif field == "SAPR":
                     try:
                         value = f"{float(value):.4f}"
                     except:
-                        value = value
+                        value = value  # Leave unmodified if not a float
 
                 if field in max_lengths and len(value) > max_lengths[field]:
                     print(f"Warning: Row {idx + 3}, field '{field}' exceeds max length ({max_lengths[field]}): {value}")
+                    sys.stdout.flush()
                     value = value[:max_lengths[field]]
 
                 out_row.append(value)
 
             output_rows.append(out_row)
 
-        output_file = get_safe_output_path(output_subdir, table, input_filename)
+        output_file = get_safe_output_path(output_dir, table, input_filename)
         output_content = [
             header_line + "\n",
             format_line + "\n"
@@ -160,53 +170,50 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
 
         write_text_file(output_file, output_content)
         print(f"✔ Output written: {os.path.basename(output_file)} ({len(output_rows)} rows, {len(df) - len(output_rows)} skipped)")
+        log(f"✔ Output written: {os.path.basename(output_file)} ({len(output_rows)} rows, {len(df) - len(output_rows)} skipped)")
+        sys.stdout.flush()
 
+    # Zip output
     zip_path = os.path.join(output_base_dir, f"{input_filename}.zip")
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, _, files in os.walk(output_subdir):
+        for root, _, files in os.walk(output_dir):
             for file in files:
                 full_path = os.path.join(root, file)
-                arcname = os.path.relpath(full_path, start=output_subdir)
+                arcname = os.path.relpath(full_path, start=output_dir)
                 zipf.write(full_path, arcname)
     print(f"✅ Zipped: {zip_path}")
+    log(f"✅ Zipped: {zip_path}")
+    sys.stdout.flush()
 
 def main():
-    with open(log_path, "w", encoding="utf-8") as log_file:
-        def log(msg):
-            print(msg)
-            sys.stdout.flush()
-            log_file.write(msg + "\n")
-            log_file.flush()
+    print("🟢 Starting script...")
+    sys.stdout.flush()
 
-        log("🚀 Script started.")
-        log(f"📂 Log path: {log_path}")
+    input_folder = "PriceList Input"
+    config_path = "configuration.xlsx"
+    sample_dir = "sample"
+    output_dir = "output"
 
-        input_folder = "PriceList Input"
-        config_path = "configuration.xlsx"
-        sample_dir = "."
-        os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
 
-        log(f"📁 Looking in folder: {input_folder}")
-        log(f"📄 Files found: {os.listdir(input_folder)}")
+    config_df = load_excel_file(config_path, header=0, dtype=str)
+    config_df.columns = [str(col).strip() for col in config_df.columns]
+    config_df = config_df.dropna(subset=['Dest_table', 'Dest_field'])
 
-        config_df = load_excel_file(config_path, header=0, dtype=str)
-        config_df.columns = [str(col).strip() for col in config_df.columns]
-        config_df = config_df.dropna(subset=['Dest_table', 'Dest_field'])
+    for file_name in os.listdir(input_folder):
+        if file_name.lower().endswith(('.xls', '.xlsx')):
+            full_path = os.path.join(input_folder, file_name)
+            process_file(full_path, config_df, sample_dir, output_dir)
 
-        for file_name in os.listdir(input_folder):
-            if file_name.lower().endswith(('.xls', '.xlsx')):
-                full_path = os.path.join(input_folder, file_name)
-                process_file(full_path, config_df, sample_dir, output_dir)
-                log(f"✅ Processed {file_name}")
+    print("✅ Script completed successfully.")
+    log("✅ Script completed successfully.")
+    sys.stdout.flush()
 
-        log("✅ Script completed successfully.")
+print("⚠️ Entered main block.")
+log("⚠️ Entered main block.")
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        with open(log_path, "a", encoding="utf-8") as log_file:
-            log_file.write(f"❌ Unhandled exception: {str(e)}\n")
-            import traceback
-            traceback.print_exc(file=log_file)
-        raise
+    main()
+print("📦 About to enter main block.")
+log("📦 About to enter main block.")
+sys.stdout.flush()
