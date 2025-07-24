@@ -6,7 +6,7 @@ import pandas as pd  # make sure pandas is imported if you read Excel
 def process_file(input_path):
     try:
         # Optional: print available sheets for debugging
-        xls = pd.ExcelFile(input_path)
+        xls = pd.ExcelFile(input_path, engine='openpyxl')
         print("✅ Available sheets:", xls.sheet_names)
 
         # Create a temporary output folder
