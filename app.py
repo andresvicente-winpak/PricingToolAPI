@@ -5,7 +5,6 @@ import os
 import tempfile
 import zipfile
 from io import BytesIO
-import magic  # for file type detection
 
 app = Flask(__name__)
 
@@ -28,10 +27,6 @@ def process():
         with open(input_excel_path, 'wb') as f:
             f.write(uploaded_excel.read())
         print("✅ Excel saved to:", input_excel_path)
-
-        # Detect MIME type of saved file
-        file_type = magic.from_file(input_excel_path, mime=True)
-        print(f"📂 Saved file type: {file_type}")
 
         # Try to open file as Excel
         try:
