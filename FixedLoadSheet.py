@@ -47,7 +47,7 @@ def safe_open_file(operation, file_path, mode="read", retries=3):
                 raise RuntimeError(f"Failed to {mode} '{file_path}' after {retries} attempts.")
 
 def load_excel_file(path, mode="read", retries=3, header=None, dtype=None, sheet_name=0):
-    return safe_open_file(lambda: pd.read_excel(path, header=header, dtype=dtype, sheet_name=sheet_name), path, mode, retries)
+    return safe_open_file(lambda: pd.read_excel(path, header=header, dtype=dtype, sheet_name=sheet_name, engine='openpyxl'), path, mode, retries)
 
 def load_text_file_lines(path, retries=3):
     return safe_open_file(lambda: open(path, "r", encoding="utf-8").readlines(), path, "read", retries)
