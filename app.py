@@ -11,11 +11,13 @@ app = Flask(__name__)
 @app.route('/process', methods=['POST'])
 def process():
     try:
+        print("📥 Receiving file...")
         uploaded_excel = BytesIO(request.get_data())
+        print("✅ File received, loading Excel...")
 
         work_dir = tempfile.mkdtemp()
         input_dir = os.path.join(work_dir, "input")
-        sample_dir = os.path.join(work_dir, "sample")
+        sample_dir = os.path.join(work_dir, ".")
         output_dir = os.path.join(work_dir, "output")
 
         os.makedirs(input_dir, exist_ok=True)
@@ -26,9 +28,11 @@ def process():
         input_excel_path = os.path.join(input_dir, "input.xlsx")
         with open(input_excel_path, 'wb') as f:
             f.write(uploaded_excel.read())
+        print("✅ Excel saved to disk.")
 
         # Load local configuration file
         config_path = os.path.join(os.getcwd(), "configuration.xlsx")
+        print(f"🔍 Loading config from {config_path}")
         config_df = load_excel_file(config_path, header=0, dtype=str)
         config_df.columns = [str(col).strip() for col in config_df.columns]
         config_df = config_df.dropna(subset=['Dest_table', 'Dest_field'])
