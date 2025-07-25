@@ -2,9 +2,15 @@ from FixedLoadSheet import process_file as fls_process_file
 import os
 import tempfile
 import pandas as pd
+import zipfile
 
 def process_file(input_path):
     try:
+
+        # Debug check before reading as Excel
+        if not zipfile.is_zipfile(input_path):
+        raise ValueError(f"{input_path} is not a valid XLSX (ZIP) file — check Power Automate")
+        
         # Create temp working directories
         temp_dir = tempfile.mkdtemp()
         output_dir = os.path.join(temp_dir, 'output')
