@@ -1,23 +1,33 @@
-import zipfile
+from FixedLoadSheet import process_file as fls_process_file
 import os
 import tempfile
 import pandas as pd
 
 def process_file(input_path):
-    # Create temporary directory
-    temp_dir = tempfile.mkdtemp()
-    zip_path = os.path.join(temp_dir, 'output.zip')
-    
-    # Load Excel file
-    xls = pd.ExcelFile(input_path, engine='openpyxl')
-    
-    # Create a zip file
-    with zipfile.ZipFile(zip_path, 'w') as zipf:
-        for sheet_name in xls.sheet_names:
-            df = pd.read_excel(xls, sheet_name=sheet_name)
-            csv_name = f"{sheet_name}.csv"
-            csv_path = os.path.join(temp_dir, csv_name)
-            df.to_csv(csv_path, index=False)
-            zipf.write(csv_path, arcname=csv_name)
+    try:
+        # Create temp working directories
+        temp_dir = tempfile.mkdtemp()
+        output_dir = os.path.join(temp_dir, 'output')
+        os.makedirs(output_dir, exist_ok=True)
 
-    return zip_path
+        # Set paths
+        config_path = os.path.join(os.getcwd(), 'configuration.xlsx')
+        sample_dir = os.getcwd()  # sample files expected at repo root
+
+        # Load configuration
+        config_df = pd.read_excel(config_path, header=0, dtype=str, engine='openpyxl')
+        config_df.columns = [str(col).strip() for col in config_df.columns]
+        config_df = config_df.dropna(subset=['Dest_table', 'Dest_field'])
+
+        # Run the real pricing logic
+        fls_process_file(input_path, config_df, sample_dir, output_dir)
+
+        # Return path to generated zip
+        input_filename = os.path.splitext(os.path.basename(input_path))[0]
+        zip_path = os.path.join(output_dir, f"{input_filename}.zip")
+        return zip_path
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise e
