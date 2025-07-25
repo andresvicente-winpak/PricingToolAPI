@@ -6,6 +6,12 @@ import zipfile
 
 def process_file(input_path):
     try:
+
+        # 🔍 DEBUG: Peek into first 100 bytes of the file
+        with open(input_path, 'rb') as f:
+            print("DEBUG - First 100 bytes of uploaded file:")
+            print(f.read(100))
+            
         # Debug check before reading as Excel
         if not zipfile.is_zipfile(input_path):
             raise ValueError(f"{input_path} is not a valid XLSX (ZIP) file — check Power Automate")
