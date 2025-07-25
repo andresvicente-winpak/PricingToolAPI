@@ -6,10 +6,9 @@ import zipfile
 
 def process_file(input_path):
     try:
-
         # Debug check before reading as Excel
         if not zipfile.is_zipfile(input_path):
-        raise ValueError(f"{input_path} is not a valid XLSX (ZIP) file — check Power Automate")
+            raise ValueError(f"{input_path} is not a valid XLSX (ZIP) file — check Power Automate")
         
         # Create temp working directories
         temp_dir = tempfile.mkdtemp()
