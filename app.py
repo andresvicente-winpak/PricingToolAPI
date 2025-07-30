@@ -28,7 +28,10 @@ def process():
             f.write(base64.b64decode(data["$content"]))
 
         # Process file
-        zip_path = process_file(input_path)
+        try:
+            zip_path = process_file(input_path)
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
         # Return zip as response
         return send_file(zip_path, as_attachment=True)
