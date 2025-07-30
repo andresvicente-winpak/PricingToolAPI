@@ -6,6 +6,9 @@ import re
 import datetime
 import zipfile
 from collections import defaultdict
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 base_dir = os.path.dirname(os.path.abspath(__file__))
 log_path = r"C:\Users\w10itasv\Documents\PricingToolPY2\script_log.txt"
