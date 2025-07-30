@@ -80,9 +80,9 @@ def process_file(pricelist_path, config_df, sample_dir, output_base_dir):
 
     excel_file = pd.ExcelFile(pricelist_path, engine='openpyxl')
     if "Load_Sheet" not in excel_file.sheet_names:
-        print(f"❌ Sheet 'Load_Sheet' not found in {pricelist_path}. Skipping.")
-        log(f"❌ Sheet 'Load_Sheet' not found in {pricelist_path}. Skipping.")
-        sys.stdout.flush()
+        message = f"❌ Sheet 'Load_Sheet' not found in {pricelist_path}."
+        log(message)
+        raise ValueError(message)
         return
     selected_sheet = "Load_Sheet"
 
