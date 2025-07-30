@@ -3,6 +3,7 @@ import os
 import tempfile
 from process_handler import process_file
 import base64
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -27,18 +28,25 @@ def process():
         with open(input_path, "wb") as f:
             f.write(base64.b64decode(data["$content"]))
 
-        # Process file
         try:
+            # Try processing file
             zip_path = process_file(input_path)
-        except Exception as e:
-            return jsonify({"error": str(e)}), 500
+            return send_file(zip_path, as_attachment=True)
 
-        # Return zip as response
-        return send_file(zip_path, as_attachment=True)
+        except Exception as e:
+            # Write error to file and return it
+            error_log_path = os.path.join(temp_dir, f"error-log.txt")
+            with open(error_log_path, "w") as errfile:
+                errfile.write("\u274C FAILED\n")
+                errfile.write(f"Timestamp: {datetime.utcnow().isoformat()}Z\n")
+                errfile.write(f"Filename: {filename}\n")
+                errfile.write(f"Error Message: {str(e)}\n")
+
+            return send_file(error_log_path, as_attachment=True, mimetype='text/plain'), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    print("⚠️ Entered main block.")
+    print("\u26a0\ufe0f Entered main block.")
     app.run(debug=True, port=10000, host="0.0.0.0")
