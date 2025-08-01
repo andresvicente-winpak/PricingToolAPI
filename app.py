@@ -46,8 +46,8 @@ def process():
             zip_path = os.path.join(temp_dir, f"error-log-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}.zip")
             with zipfile.ZipFile(zip_path, 'w') as zipf:
                 zipf.write(error_log_path, arcname="error-log.txt")
-
-            return send_file(error_log_path, as_attachment=True, mimetype='text/plain'), 200
+            
+            return send_file(zip_path, as_attachment=True, mimetype='application/zip'), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
