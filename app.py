@@ -41,6 +41,11 @@ def process():
                 errfile.write(f"Timestamp: {datetime.utcnow().isoformat()}Z\n")
                 errfile.write(f"Filename: {filename}\n")
                 errfile.write(f"Error Message: {str(e)}\n")
+           
+            # Zip the error file
+            zip_path = os.path.join(temp_dir, f"error-log-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}.zip")
+            with zipfile.ZipFile(zip_path, 'w') as zipf:
+                zipf.write(error_log_path, arcname="error-log.txt")
 
             return send_file(error_log_path, as_attachment=True, mimetype='text/plain'), 200
 
