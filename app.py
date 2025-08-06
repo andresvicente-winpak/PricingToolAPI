@@ -34,13 +34,20 @@ def process():
             return send_file(zip_path, as_attachment=True)
 
         except Exception as e:
+            # Handle friendly error message
+            raw_error = str(e)
+            if "Sheet 'Load_Sheet' not found" in raw_error:
+                friendly_message = "No Load Data sheet was found. Please ensure your Excel file contains a sheet named 'Load_Sheet' and try again."
+            else:
+                friendly_message = raw_error
+
             # Write error to file and return it
             error_log_path = os.path.join(temp_dir, f"error-log.txt")
             with open(error_log_path, "w") as errfile:
                 errfile.write("\u274C FAILED\n")
                 errfile.write(f"Timestamp: {datetime.utcnow().isoformat()}Z\n")
                 errfile.write(f"Filename: {filename}\n")
-                errfile.write(f"Error Message: {str(e)}\n")
+                errfile.write(f"Error Message: {friendly_message}\n")
            
             # Zip the error file
             zip_path = os.path.join(temp_dir, f"error-log-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}.zip")
@@ -55,3 +62,4 @@ def process():
 if __name__ == "__main__":
     print("\u26a0\ufe0f Entered main block.")
     app.run(debug=True, port=10000, host="0.0.0.0")
+
