@@ -41,7 +41,7 @@ def process():
             with open(error_log_path, "w") as errfile:
                 errfile.write("\u274C FAILED\n")
                 errfile.write(f"Timestamp: {datetime.utcnow().isoformat()}Z\n")
-                errfile.write(f"Filename: {os.path.basename(filename)}\n")
+                errfile.write(f"Price Filename: {os.path.basename(filename)}\n")
                 #errfile.write(f"Filename: {filename}\n")
                 errfile.write(f"Error Message: {friendly_message}\n")
 
@@ -58,6 +58,7 @@ def process():
 if __name__ == "__main__":
     print("\u26a0\ufe0f Entered main block.")
     app.run(debug=True, port=10000, host="0.0.0.0")
+
 
 
 
