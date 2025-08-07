@@ -41,16 +41,14 @@ def process():
             with open(error_log_path, "w") as errfile:
                 errfile.write("\u274C FAILED\n")
                 errfile.write(f"Timestamp: {datetime.utcnow().isoformat()}Z\n")
-                errfile.write(f"Price Filename: {os.path.basename(filename)}\n")
-                #errfile.write(f"Filename: {filename}\n")
+                errfile.write(f"Filename p: {filename}\n")
                 errfile.write(f"Error Message: {friendly_message}\n")
 
             zip_path = os.path.join(temp_dir, f"error-log-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}.zip")
             with zipfile.ZipFile(zip_path, 'w') as zipf:
-               zipf.write(error_log_path, arcname="error-log.txt")
+                zipf.write(error_log_path, arcname="error-log.txt")
 
             return send_file(zip_path, as_attachment=True, mimetype='application/zip'), 200
-            #return send_file(error_log_path, as_attachment=True, mimetype='text/plain'), 200    
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -58,7 +56,3 @@ def process():
 if __name__ == "__main__":
     print("\u26a0\ufe0f Entered main block.")
     app.run(debug=True, port=10000, host="0.0.0.0")
-
-
-
-
