@@ -3,7 +3,7 @@ import os
 import tempfile
 import base64
 from datetime import datetime
-#import zipfile
+import zipfile
 from process_handler import process_file
 
 app = Flask(__name__)
@@ -44,12 +44,12 @@ def process():
                 errfile.write(f"Filename: {filename}\n")
                 errfile.write(f"Error Message: {friendly_message}\n")
 
-            #zip_path = os.path.join(temp_dir, f"error-log-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}.zip")
-            #with zipfile.ZipFile(zip_path, 'w') as zipf:
-            #   zipf.write(error_log_path, arcname="error-log.txt")
+            zip_path = os.path.join(temp_dir, f"error-log-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}.zip")
+            with zipfile.ZipFile(zip_path, 'w') as zipf:
+               zipf.write(error_log_path, arcname="error-log.txt")
 
-            #return send_file(zip_path, as_attachment=True, mimetype='application/zip'), 200
-            return send_file(error_log_path, as_attachment=True, mimetype='text/plain'), 200    
+            return send_file(zip_path, as_attachment=True, mimetype='application/zip'), 200
+            #return send_file(error_log_path, as_attachment=True, mimetype='text/plain'), 200    
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -57,4 +57,5 @@ def process():
 if __name__ == "__main__":
     print("\u26a0\ufe0f Entered main block.")
     app.run(debug=True, port=10000, host="0.0.0.0")
+
 
